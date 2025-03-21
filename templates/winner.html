@@ -11,43 +11,34 @@
     <p>⏱️ Time Taken: {{ time }}s</p>
 
     <!-- 🧑 User Game History -->
-    <h3>Your Game History ({{ username }}):</h3>
-    <ul>
-        {% for entry in history %}
-            <li>
-                {% if 'WON' in entry %}
-                    {{ entry | replace('(WON)', '') }} <span style="color:lime;">(WON)</span>
-                {% elif 'LOST' in entry %}
-                    {{ entry | replace('(LOST)', '') }} <span style="color:red;">(LOST)</span>
-                {% else %}
-                    {{ entry }}
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
+<h3>Your Game History ({{ username }}):</h3>
+<ul>
+    {% for game in user_games %}
+        <li>
+            Game {{ loop.index }}: {{ game.time_taken }}s
+            {% if game.result == 'WON' %}
+                <span style="color:lime;">(WON)</span>
+            {% elif game.result == 'LOST' %}
+                <span style="color:red;">(LOST)</span>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
 
-    <!-- 🌍 Leaderboard for All Users -->
-    <h3>Global Game History 🌐</h3>
-    <ul>
-        {% for user, records in all_histories.items() %}
-            <li><strong>{{ user }}:</strong>
-                <ul>
-                    {% for entry in records %}
-                        <li>
-                            {% if 'WON' in entry %}
-                                {{ entry | replace('(WON)', '') }} <span style="color:lime;">(WON)</span>
-                            {% elif 'LOST' in entry %}
-                                {{ entry | replace('(LOST)', '') }} <span style="color:red;">(LOST)</span>
-                            {% else %}
-                                {{ entry }}
-                            {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            </li>
-        {% endfor %}
-    </ul>
-
+<!-- 🌍 Global Game History -->
+<h3>Global Game History 🌐</h3>
+<ul>
+    {% for game in all_games %}
+        <li>
+            {{ game.player.username }} - {{ game.time_taken }}s
+            {% if game.result == 'WON' %}
+                <span style="color:lime;">(WON)</span>
+            {% elif game.result == 'LOST' %}
+                <span style="color:red;">(LOST)</span>
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
     <!-- Play Again -->
     <form method="get" action="{{ url_for('start') }}">
         <button>Play Again</button>

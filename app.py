@@ -64,6 +64,7 @@ def start():
     if request.method == 'POST':
         username = request.form['username']
         subject_id = request.form['subject']
+        difficulty = request.form['difficulty']  # ✅ Capture difficulty
 
         user = User.query.filter_by(username=username).first()
         if not user:
@@ -73,6 +74,7 @@ def start():
 
         session['username'] = user.username
         session['user_id'] = user.id
+        session['difficulty'] = difficulty  # ✅ Store in session for later
         game_state.subject_id = int(subject_id)
         game_state.reset()
         return redirect(url_for('play_game'))

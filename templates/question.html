@@ -6,11 +6,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h2>❓ {{ question.question }}</h2>
+    <h2>❓ {{ question.question_text }}</h2>
     <form method="post" action="{{ url_for('answer') }}">
-        {% for choice in question.choices %}
-            <button class="choice-btn" type="submit" name="answer" value="{{ choice }}">{{ choice }}</button>
-        {% endfor %}
+        <button class="choice-btn" type="submit" name="answer" value="{{ question.choice1 }}">{{ question.choice1 }}</button>
+        <button class="choice-btn" type="submit" name="answer" value="{{ question.choice2 }}">{{ question.choice2 }}</button>
+        <button class="choice-btn" type="submit" name="answer" value="{{ question.choice3 }}">{{ question.choice3 }}</button>
+        <button class="choice-btn" type="submit" name="answer" value="{{ question.choice4 }}">{{ question.choice4 }}</button>
     </form>
 </body>
 </html>
