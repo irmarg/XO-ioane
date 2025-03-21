@@ -12,7 +12,7 @@
             <input type="text" name="username" placeholder="Nickname" required>
             <select name="subject">
                 {% for subject in subjects %}
-                    <option value="{{ subject }}">{{ subject.capitalize() }}</option>
+                <option value="{{ subject.id }}">{{ subject.name.capitalize() }}</option>
                 {% endfor %}
             </select>
             <select name="difficulty">

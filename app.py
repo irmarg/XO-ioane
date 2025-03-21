@@ -6,19 +6,19 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# 🔗 Database Configuration
+# Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///local.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# 🧑 User Table
+# User Table
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     games = db.relationship('Game', backref='player', lazy=True)
 
-# 🎮 Game Table
+# Game Table
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -26,13 +26,13 @@ class Game(db.Model):
     result = db.Column(db.String(10), nullable=False)  # "WON" or "LOST"
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# 📚 Subject Table
+# Subject Table
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     questions = db.relationship('Question', backref='subject', lazy=True)
 
-# ❓ Question Table
+# Question Table
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
@@ -43,7 +43,7 @@ class Question(db.Model):
     choice4 = db.Column(db.String(100), nullable=False)
     correct_answer = db.Column(db.String(100), nullable=False)
 
-# 🧠 Game Logic (in-memory)
+# Game Logic (in-memory)
 class GameState:
     def __init__(self):
         self.board = [''] * 9
@@ -58,7 +58,7 @@ class GameState:
 
 game_state = GameState()
 
-# 🚀 Routes
+# Routes
 @app.route('/', methods=['GET', 'POST'])
 def start():
     if request.method == 'POST':
@@ -144,7 +144,7 @@ def end_game(winner):
 
     return render_template('winner.html', winner=winner, time=elapsed, user_games=user_games, all_games=all_games, username=session['username'])
 
-# 🔐 Admin Login
+# Admin Login
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
@@ -193,7 +193,7 @@ def logout():
     session.clear()
     return redirect(url_for('start'))
 
-# 🔥 Run db.create_all() at app startup (safe for Render + local)
+# Run db.create_all() at app startup (for Render + local)
 with app.app_context():
     db.create_all()
 
