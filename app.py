@@ -1,185 +1,156 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import random
-import json
-import os
-import time
-from models import db, User, Game, Subject, Question
+from flask_sqlalchemy import SQLAlchemy
+import os, random, time
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# 📦 Configure SQLAlchemy
+# 🔗 Database Configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL", "sqlite:///local.db")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
+db = SQLAlchemy(app)
 
-# Paths
-DATA_DIR = "data"
-QUESTIONS_DIR = os.path.join(DATA_DIR, "questions")
-USER_TIMES_FILE = os.path.join(DATA_DIR, "user_times.json")
-SUBJECTS_FILE = os.path.join(DATA_DIR, "subjects.json")
+# 🧑 User Table
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
+    games = db.relationship('Game', backref='player', lazy=True)
 
-# Initialize directories
-os.makedirs(QUESTIONS_DIR, exist_ok=True)
-if not os.path.exists(SUBJECTS_FILE):
-    with open(SUBJECTS_FILE, 'w') as f:
-        json.dump(["math", "science"], f, indent=4)
+# 🎮 Game Table
+class Game(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    time_taken = db.Column(db.Float, nullable=False)
+    result = db.Column(db.String(10), nullable=False)  # "WON" or "LOST"
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Admin credentials
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "adminpass"
+# 📚 Subject Table
+class Subject(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    questions = db.relationship('Question', backref='subject', lazy=True)
 
-# Game state container
-class Game:
+# ❓ Question Table
+class Question(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
+    question_text = db.Column(db.String(300), nullable=False)
+    choice1 = db.Column(db.String(100), nullable=False)
+    choice2 = db.Column(db.String(100), nullable=False)
+    choice3 = db.Column(db.String(100), nullable=False)
+    choice4 = db.Column(db.String(100), nullable=False)
+    correct_answer = db.Column(db.String(100), nullable=False)
+
+# 🧠 Game Logic (in-memory)
+class GameState:
     def __init__(self):
-        self.board = ['' for _ in range(9)]
-        self.subject = "math"
-        self.difficulty = "medium"
+        self.board = [''] * 9
+        self.subject_id = None
         self.start_time = None
         self.over = False
 
     def reset(self):
-        self.board = ['' for _ in range(9)]
+        self.board = [''] * 9
         self.start_time = time.time()
         self.over = False
 
-game = Game()
+game_state = GameState()
 
-# Utilities
-def load_subjects():
-    with open(SUBJECTS_FILE, "r") as f:
-        return json.load(f)
-
-def save_subjects(subjects):
-    with open(SUBJECTS_FILE, "w") as f:
-        json.dump(subjects, f, indent=4)
-
-def load_questions(subject):
-    file_path = os.path.join(QUESTIONS_DIR, f"{subject}.json")
-    if os.path.exists(file_path):
-        with open(file_path, "r") as f:
-            return json.load(f)
-    return []
-
-def save_questions(subject, questions):
-    file_path = os.path.join(QUESTIONS_DIR, f"{subject}.json")
-    with open(file_path, "w") as f:
-        json.dump(questions, f, indent=4)
-
-def load_user_times():
-    if os.path.exists(USER_TIMES_FILE):
-        with open(USER_TIMES_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-def save_user_times(times):
-    with open(USER_TIMES_FILE, "w") as f:
-        json.dump(times, f, indent=4)
-
-# Routes
+# 🚀 Routes
 @app.route('/', methods=['GET', 'POST'])
 def start():
     if request.method == 'POST':
         username = request.form['username']
-        difficulty = request.form['difficulty']
-        subject = request.form['subject']
+        subject_id = request.form['subject']
 
-        session['username'] = username
-        game.difficulty = difficulty
-        game.subject = subject
-        game.reset()
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            user = User(username=username)
+            db.session.add(user)
+            db.session.commit()
+
+        session['username'] = user.username
+        session['user_id'] = user.id
+        game_state.subject_id = int(subject_id)
+        game_state.reset()
         return redirect(url_for('play_game'))
-    
-    subjects = load_subjects()
+
+    subjects = Subject.query.all()
     return render_template('start.html', subjects=subjects)
 
 @app.route('/play')
 def play_game():
-    return render_template('index.html', board=game.board, username=session['username'], start_time=game.start_time)
+    return render_template('index.html', board=game_state.board, username=session['username'], start_time=game_state.start_time)
 
 @app.route('/move/<int:index>', methods=['POST'])
 def move(index):
-    if game.board[index] != '' or game.over:
+    if game_state.board[index] != '' or game_state.over:
         return redirect(url_for('play_game'))
-    
-    questions = load_questions(game.subject)
-    print(f"DEBUG: Questions loaded for subject '{game.subject}': {questions}")  # ADD THIS
+
+    questions = Question.query.filter_by(subject_id=game_state.subject_id).all()
     if not questions:
         return redirect(url_for('play_game'))
 
     question = random.choice(questions)
-    print(f"DEBUG: Selected question: {question}")  # ADD THIS
-
     session['move_index'] = index
-    session['current_question'] = question
+    session['question_id'] = question.id
     return render_template('question.html', question=question)
 
 @app.route('/answer', methods=['POST'])
 def answer():
-    selected_answer = request.form['answer']
-    index = session['move_index']
-    question = session['current_question']
+    selected = request.form['answer']
+    question = Question.query.get(session['question_id'])
 
-    if selected_answer == question['answer']:
-        game.board[index] = 'X'
+    if selected == question.correct_answer:
+        idx = session['move_index']
+        game_state.board[idx] = 'X'
         winner = check_winner()
         if winner:
             return end_game(winner)
-
-        ai_auto_move()
+        ai_move()
         winner = check_winner()
         if winner:
             return end_game(winner)
-
     return redirect(url_for('play_game'))
 
+def ai_move():
+    empty = [i for i, v in enumerate(game_state.board) if v == '']
+    if empty:
+        move = random.choice(empty)
+        game_state.board[move] = 'O'
+
 def check_winner():
-    win_patterns = [
-        [0,1,2],[3,4,5],[6,7,8],
-        [0,3,6],[1,4,7],[2,5,8],
-        [0,4,8],[2,4,6]
-    ]
-    for pattern in win_patterns:
-        a,b,c = pattern
-        if game.board[a] == game.board[b] == game.board[c] != '':
-            game.over = True
-            return session['username'] if game.board[a] == 'X' else 'AI'
-    if '' not in game.board:
-        game.over = True
+    wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+    for a,b,c in wins:
+        if game_state.board[a] == game_state.board[b] == game_state.board[c] != '':
+            game_state.over = True
+            return session['username'] if game_state.board[a] == 'X' else 'AI'
+    if '' not in game_state.board:
+        game_state.over = True
         return 'Draw'
     return None
 
-def ai_auto_move():
-    empty = [i for i, val in enumerate(game.board) if val == '']
-    if not empty: return
-    move = random.choice(empty)
-    game.board[move] = 'O'
-
 def end_game(winner):
-    elapsed_time = round(time.time() - game.start_time, 2)
-    username = session['username']
-    times = load_user_times()
-    result = "WON" if winner == username else "LOST" if winner == "AI" else "DRAW"
-    times.setdefault(username, []).append(f"Game {len(times.get(username, [])) +1}: {elapsed_time}s ({result})")
-    save_user_times(times)
-    return render_template(
-    'winner.html',
-    winner=winner,
-    board=game.board,
-    time=elapsed_time,
-    history=times[username],
-    username=username,
-    all_histories=times  # Send all user data
-)
+    elapsed = round(time.time() - game_state.start_time, 2)
+    result = "WON" if winner == session['username'] else "LOST"
+    game = Game(user_id=session['user_id'], time_taken=elapsed, result=result)
+    db.session.add(game)
+    db.session.commit()
 
+    user_games = Game.query.filter_by(user_id=session['user_id']).all()
+    all_games = Game.query.all()
 
-# Admin Routes
+    return render_template('winner.html', winner=winner, time=elapsed, user_games=user_games, all_games=all_games, username=session['username'])
+
+# 🔐 Admin Login
 @app.route('/admin', methods=['GET', 'POST'])
 def admin_login():
     if request.method == 'POST':
-        user = request.form['username']
+        username = request.form['username']
         pw = request.form['password']
-        if user == ADMIN_USERNAME and pw == ADMIN_PASSWORD:
+        if username == "admin" and pw == "adminpass":
             session['admin'] = True
             return redirect(url_for('admin_panel'))
     return render_template('admin_login.html')
@@ -188,34 +159,33 @@ def admin_login():
 def admin_panel():
     if 'admin' not in session:
         return redirect(url_for('admin_login'))
-
-    subjects = load_subjects()
-    questions = {}
-    for subject in subjects:
-        questions[subject] = load_questions(subject)
-    
+    subjects = Subject.query.all()
+    questions = Question.query.all()
     return render_template('admin_panel.html', subjects=subjects, questions=questions)
 
-@app.route('/admin/add_subject', methods=['POST'])
+@app.route('/add_subject', methods=['POST'])
 def add_subject():
-    new_subject = request.form['new_subject']
-    subjects = load_subjects()
-    if new_subject not in subjects:
-        subjects.append(new_subject)
-        save_subjects(subjects)
+    name = request.form['new_subject']
+    if not Subject.query.filter_by(name=name).first():
+        subject = Subject(name=name)
+        db.session.add(subject)
+        db.session.commit()
     return redirect(url_for('admin_panel'))
 
-@app.route('/admin/add_question', methods=['POST'])
+@app.route('/add_question', methods=['POST'])
 def add_question():
-    subject = request.form['subject']
-    question_text = request.form['question']
-    choices = [request.form['choice1'], request.form['choice2'], request.form['choice3'], request.form['choice4']]
-    answer = request.form['answer']
-    question = {"question": question_text, "choices": choices, "answer": answer}
-
-    questions = load_questions(subject)
-    questions.append(question)
-    save_questions(subject, questions)
+    subject_id = int(request.form['subject'])
+    q = Question(
+        subject_id=subject_id,
+        question_text=request.form['question'],
+        choice1=request.form['choice1'],
+        choice2=request.form['choice2'],
+        choice3=request.form['choice3'],
+        choice4=request.form['choice4'],
+        correct_answer=request.form['answer']
+    )
+    db.session.add(q)
+    db.session.commit()
     return redirect(url_for('admin_panel'))
 
 @app.route('/logout')
@@ -227,4 +197,3 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
-
