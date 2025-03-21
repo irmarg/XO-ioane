@@ -153,6 +153,8 @@ def admin_login():
         if username == "admin" and pw == "adminpass":
             session['admin'] = True
             return redirect(url_for('admin_panel'))
+        else:
+            return render_template('admin_login.html', error="Invalid credentials")
     return render_template('admin_login.html')
 
 @app.route('/admin_panel', methods=['GET', 'POST'])
