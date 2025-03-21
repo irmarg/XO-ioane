@@ -158,7 +158,7 @@ def admin_login():
         else:
             return render_template('admin_login.html', error="Invalid credentials")
     return render_template('admin_login.html')
-
+#admin panel
 @app.route('/admin_panel', methods=['GET', 'POST'])
 def admin_panel():
     if 'admin' not in session:
@@ -166,7 +166,7 @@ def admin_panel():
     subjects = Subject.query.all()
     questions = Question.query.all()
     return render_template('admin_panel.html', subjects=subjects, questions=questions)
-
+# Add Subject
 @app.route('/add_subject', methods=['POST'])
 def add_subject():
     name = request.form['new_subject']
@@ -175,7 +175,7 @@ def add_subject():
         db.session.add(subject)
         db.session.commit()
     return redirect(url_for('admin_panel'))
-
+# Add Question
 @app.route('/add_question', methods=['POST'])
 def add_question():
     subject_id = int(request.form['subject'])
@@ -191,6 +191,26 @@ def add_question():
     db.session.add(q)
     db.session.commit()
     return redirect(url_for('admin_panel'))
+#delete question
+@app.route('/delete_question/<int:qid>', methods=['POST'])
+def delete_question(qid):
+    if 'admin' not in session:
+        return redirect(url_for('admin_login'))
+    q = Question.query.get_or_404(qid)
+    db.session.delete(q)
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+#edit question
+@app.route('/edit_question/<int:qid>', methods=['POST'])
+def edit_question(qid):
+    if 'admin' not in session:
+        return redirect(url_for('admin_login'))
+    q = Question.query.get_or_404(qid)
+    new_text = request.form['new_text']
+    q.question_text = new_text
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+
 
 @app.route('/logout')
 def logout():
