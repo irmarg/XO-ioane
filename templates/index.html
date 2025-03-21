@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Game Board</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h2>Welcome, {{ username }}!</h2>
+    <div class="timer">⏱️ Time: <span id="timer">0</span>s</div>
+
+    <div class="board">
+        {% for i in range(9) %}
+            <div class="cell">
+                {% if board[i] == '' %}
+                    <form method="post" action="{{ url_for('move', index=i) }}">
+                        <button class="cell-btn">Play</button>
+                    </form>
+                {% else %}
+                    {{ board[i] }}
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <form method="get" action="{{ url_for('start') }}">
+        <button class="reset-btn">🔄 Restart</button>
+    </form>
+
+<script>
+    const start = {{ start_time }};
+    function tick() {
+        const now = Math.floor(Date.now() / 1000);
+        document.getElementById("timer").innerText = now - start;
+    }
+    setInterval(tick, 1000);
+</script>
+</body>
+</html>

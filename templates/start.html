@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Start Game</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Tic-Tac-Toe Quiz 🎮</h1>
+        <form method="POST" class="form-box">
+            <input type="text" name="username" placeholder="Nickname" required>
+            <select name="subject">
+                {% for subject in subjects %}
+                    <option value="{{ subject }}">{{ subject.capitalize() }}</option>
+                {% endfor %}
+            </select>
+            <select name="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <button type="submit">Start Game</button>
+        </form>
+        <a href="{{ url_for('admin_login') }}">🔐 Admin Login</a>
+    </div>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Question</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <h2>❓ {{ question.question }}</h2>
+    <form method="post" action="{{ url_for('answer') }}">
+        {% for choice in question.choices %}
+            <button class="choice-btn" type="submit" name="answer" value="{{ choice }}">{{ choice }}</button>
+        {% endfor %}
+    </form>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Game Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <!-- 🏆 Victory Message -->
+    <h1>🏆 {{ winner }} Wins!</h1>
+    <p>⏱️ Time Taken: {{ time }}s</p>
+
+    <!-- 🧑 User Game History -->
+    <h3>Your Game History ({{ username }}):</h3>
+    <ul>
+        {% for entry in history %}
+            <li>
+                {% if 'WON' in entry %}
+                    {{ entry | replace('(WON)', '') }} <span style="color:lime;">(WON)</span>
+                {% elif 'LOST' in entry %}
+                    {{ entry | replace('(LOST)', '') }} <span style="color:red;">(LOST)</span>
+                {% else %}
+                    {{ entry }}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- 🌍 Leaderboard for All Users -->
+    <h3>Global Game History 🌐</h3>
+    <ul>
+        {% for user, records in all_histories.items() %}
+            <li><strong>{{ user }}:</strong>
+                <ul>
+                    {% for entry in records %}
+                        <li>
+                            {% if 'WON' in entry %}
+                                {{ entry | replace('(WON)', '') }} <span style="color:lime;">(WON)</span>
+                            {% elif 'LOST' in entry %}
+                                {{ entry | replace('(LOST)', '') }} <span style="color:red;">(LOST)</span>
+                            {% else %}
+                                {{ entry }}
+                            {% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Play Again -->
+    <form method="get" action="{{ url_for('start') }}">
+        <button>Play Again</button>
+    </form>
+</body>
+</html>

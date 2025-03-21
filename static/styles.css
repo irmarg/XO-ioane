@@ -1,0 +1,156 @@
+/* Base Styling */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(to bottom right, #0f2027, #203a43, #2c5364);
+    color: #ffffff;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+}
+
+h1, h2, h3 {
+    margin: 10px 0;
+    color: #00ffe5;
+    text-shadow: 0 0 5px #00ffe5;
+}
+
+.container {
+    max-width: 400px;
+    margin: auto;
+    padding: 20px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,255,255,0.3);
+}
+
+a {
+    color: #00ffe5;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Buttons */
+button {
+    background-color: #00bcd4;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    margin-top: 10px;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+
+button:hover {
+    background-color: #0097a7;
+    transform: scale(1.05);
+}
+
+.reset-btn {
+    background: #ff1744;
+}
+
+.reset-btn:hover {
+    background: #d50000;
+}
+
+/* Form Box */
+.form-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* Inputs */
+input, select {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1em;
+}
+
+/* Game Board */
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    gap: 10px;
+    justify-content: center;
+    margin: 20px auto;
+}
+
+.cell {
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    border: 2px solid #00ffe5;
+    font-size: 2em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 5px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.cell:hover {
+    background: rgba(0,255,229,0.2);
+    transform: scale(1.05);
+}
+
+.cell-btn {
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: #00ffe5;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+.cell-btn:hover {
+    background: rgba(0,255,229,0.2);
+}
+
+/* Question Choices */
+.choice-btn {
+    background: rgba(0,255,229,0.2);
+    color: #00ffe5;
+    border: 1px solid #00ffe5;
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 1em;
+    border-radius: 8px;
+    transition: background 0.3s, transform 0.2s;
+}
+
+.choice-btn:hover {
+    background: rgba(0,255,229,0.4);
+    transform: scale(1.05);
+}
+
+/* Timer */
+.timer {
+    font-size: 1.2em;
+    color: #ffeb3b;
+    text-shadow: 0 0 10px #ffeb3b;
+    margin: 10px 0;
+}
+
+/* Winner Page */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    margin: 5px 0;
+    color: #90caf9;
+    text-shadow: 0 0 2px #90caf9;
+}
