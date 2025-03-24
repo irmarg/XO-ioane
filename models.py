@@ -3,14 +3,14 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-# 🧑 User Table
+# User Table
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     games = db.relationship('Game', backref='player', lazy=True)
 
-# 🎮 Game Table
+# Game Table
 class Game(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -18,13 +18,13 @@ class Game(db.Model):
     result = db.Column(db.String(10), nullable=False)  # "WON" or "LOST"
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-# 📚 Subject Table
+# Subject Table
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     questions = db.relationship('Question', backref='subject', lazy=True)
 
-# ❓ Question Table
+# Question Table
 class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     subject_id = db.Column(db.Integer, db.ForeignKey('subject.id'), nullable=False)
